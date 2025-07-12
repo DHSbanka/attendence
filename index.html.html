@@ -45,27 +45,39 @@
     // Fill current date-time
     document.getElementById('datetime').value = new Date().toLocaleString();
 
-    // Camera setup
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const photoData = document.getElementById('photoData');
+    <script>
+  // Camera setup
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const photoData = document.getElementById('photoData');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(error => {
-        document.getElementById('status').innerText = "Camera error: " + error;
-      });
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+    })
+    .catch(error => {
+      document.getElementById('status').innerText = "Camera error: " + error;
+    });
 
-    function capturePhoto() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      const data = canvas.toDataURL('image/png');
-      photoData.value = data;
+  // Correct Capture Photo function
+  function capturePhoto() {
+    if (!video.videoWidth || !video.videoHeight) {
+      alert("⚠️ Video not ready. Try again.");
+      return;
     }
 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = canvas.toDataURL('image/png');
+    photoData.value = imageData;
+
+    alert("✅ Photo captured!");
+  }
+</script>
     // Submit to Google Apps Script
     document.getElementById('attendanceForm').addEventListener('submit', function(e) {
       e.preventDefault();
