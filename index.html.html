@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    video, canvas { width: 100%; max-width: 300px; }
+  </style>
+</head>
+<body>
+  <h2>📋 Attendance Form</h2>
+  <form id="attendanceForm">
+    <label>👤 Name:</label><br>
+    <input type="text" name="name" required><br><br>
+
+    <label>📸 Capture Photo:</label><br>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display:none;"></canvas><br>
+    <button type="button" onclick="capturePhoto()">Capture</button>
+    <input type="hidden" name="photoData" id="photoData"><br><br>
+
+    <label>📍 Location:</label><br>
+    <input type="text" name="location" id="location" readonly><br><br>
+
+    <label>🕒 Timestamp:</label><br>
+    <input type="text" name="datetime" id="datetime" readonly><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    // Fill location
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        document.getElementById('location').value = position.coords.latitude + ',' + position.coords.longitude;
+      },
+      function (error) {
+        document.getElementById('location').value = "Permission denied or unavailable";
+      }
+    );
+
+    // Fill current date-time
+    document.getElementById('datetime').value = new Date().toLocaleString();
+
+    // Camera setup
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const photoData = document.getElementById('photoData');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        document.getElementById('status').innerText = "Camera error: " + error;
+      });
+
+    function capturePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const data = canvas.toDataURL('image/png');
+      photoData.value = data;
+    }
+
+    // Submit to Google Apps Script
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('https://script.google.com/macros/s/AKfycbz02w5QDzOtlHqYJwyCnaZoTuszi9cZhTWKf-aupZ0QxPcGdWrg787ZUVtgrgUURrQCvg/exec', {
+        method: 'POST',
+        body: new FormData(this)
+      }).then(res => res.text())
+        .then(data => document.getElementById('status').innerText = "✅ Submitted!")
+        .catch(err => document.getElementById('status').innerText = "❌ Error: " + err);
+    });
+  </script>
+</body>
+</html>
